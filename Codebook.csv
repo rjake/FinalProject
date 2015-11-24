@@ -1,0 +1,41 @@
+Var,Pop,Question,Qual,Qual2
+AT5AA,Native Born,Citizenship,,
+AT5AB,Foreign Born,Citizenship,,
+AL8AA,Native Born,Place of Birth,In State,
+AL8AB,Native Born,Place of Birth,Other State,total
+AL8AC,Native Born,Place of Birth,Other State,Northeast
+AL8AD,Native Born,Place of Birth,Other State,Midwest
+AL8AE,Native Born,Place of Birth,Other State,South
+AL8AF,Native Born,Place of Birth,Other State,West
+AL8AG,Native Born,Place of Birth,Outside US,
+AL8AH,Native Born,Place of Birth,not reported,
+AJ6AA,Foreign Born,Place of Birth,Europe,Northern
+AJ6AB,Foreign Born,Place of Birth,Europe,Northern
+AJ6AC,Foreign Born,Place of Birth,Europe,Northern
+AJ6AD,Foreign Born,Place of Birth,Europe,Northern
+AJ6AE,Foreign Born,Place of Birth,Europe,Northern
+AJ6AF,Foreign Born,Place of Birth,Europe,Western
+AJ6AG,Foreign Born,Place of Birth,Europe,Western
+AJ6AH,Foreign Born,Place of Birth,Europe,Western
+AJ6AI,Foreign Born,Place of Birth,Europe,Western
+AJ6AJ,Foreign Born,Place of Birth,Europe,Western
+AJ6AK,Foreign Born,Place of Birth,Europe,Southern
+AJ6AL,Foreign Born,Place of Birth,Europe,Southern
+AJ6AM,Foreign Born,Place of Birth,Europe,Southern
+AJ6AN,Foreign Born,Place of Birth,Europe,Eastern
+AJ6AO,Foreign Born,Place of Birth,Europe,Eastern
+AJ6AP,Foreign Born,Place of Birth,Europe,Eastern
+AJ6AQ,Foreign Born,Place of Birth,Europe,Eastern
+AJ6AR,Foreign Born,Place of Birth,Europe,Eastern
+AJ6AS,Foreign Born,Place of Birth,Europe,Other
+AJ6AT,Foreign Born,Place of Birth,Europe,former USSR
+AJ6AU,Foreign Born,Place of Birth,Asia,Eastern
+AJ6AV,Foreign Born,Place of Birth,Asia,Eastern
+AJ6AW,Foreign Born,Place of Birth,Asia,Other
+AJ6AX,Foreign Born,Place of Birth,Africa,
+AJ6AY,Foreign Born,Place of Birth,Oceania,
+AJ6AZ,Foreign Born,Place of Birth,Americas,Mexico/Cuba
+AJ6BA,Foreign Born,Place of Birth,Americas,Mexico/Cuba
+AJ6BB,Foreign Born,Place of Birth,Americas,Canada
+AJ6BC,Foreign Born,Place of Birth,Americas,Other
+AJ6BD,Foreign Born,Place of Birth,at sea,
