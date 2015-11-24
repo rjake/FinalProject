@@ -1,0 +1,550 @@
+---
+title: "Immigration and Reviatilzation in Philadelphia"
+author: "Jake Riley"
+output: html_document
+---
+
+Use this template to complete your project throughout the course. Your Final Project presentation in class will be based on the contents of this document. Due dates:
+
+- Topic choice: 9/18/15
+- List of faculty/staff to be contacted: 10/2/15
+- Complete overview with data source to address a specific problem identified: 10/16/15
+- Introduction: 10/30/15
+- Methods and Results draft: 11/13/15
+- Final Document: 11/30/15
+
+### Overview
+The goal of my project is to look at demographic shifts in the foreign-born community in Philadelphia between 1970-2010. I will utilize data from the National Historic GIS [NHGIS](https://data2.nhgis.org/main), the Longitudinal Tract Database [LTDB](http://www.s4.brown.edu/us2010/Researcher/LTDB1.htm), and data related to land use and crime through [OpenDataPhilly](https://www.opendataphilly.org). NHGIS has allowed the census to be studied longitudinally by standardizing questions over time. The wording of both questions and answers have changed over time and so NHGIS has aligned these responses to allow social scientists to study responses. An easy example of the importance of aligning these questions is that political borders change over time. For example, the USSR was an acceptable response to place of birth in the 1980s but has not been a valid response since it's dissolution in the early 1990s.
+
+
+
+
+*In this section, give a brief a description of your project and its goal, what data you are using to complete it, and what three faculty/staff in different fields you have spoken to about your project with a brief summary of what you learned from each person.*
+
+***Eugene Brusilovsky (MUSA):*** Crime, commercial corridor, and year of immigration data can be examined using regression. For crime: use pearson correlation. Use scatter plots. Normalize by foreign born/pop or f.born/sq. mile. May want to consider a 3D map where height = density of f.born and color = density of crime. For commercial corridor: may turn into dummy variable (0,1) or calculate area of commercial corridor in each block group. For year of immigration: %f.born after 1990 ~ %f.born before 1990. For density data, determine if denominator should be area or total pop, and include justification in the write up. Block group data would be ideal but geography may be too small for f.born (due to small % of pop and sampling methods). 
+* ***Irma Elo (SOCI):*** May want to look at f.born & median houseing value. Other administrative data sets: "American Housing Survey" and "Economic Census". May want to look at citizenship status of foreign born.
+* ***Amy Hillier (CPLN):*** for block groups, must consider margin of error. Decennial census may have hispanic by country of origin (other countries not captured in census, just ACS). NHGIS good place to compare data across decades. May think about doing an "index of dissimilarity."
+
+
+
+### Introduction 
+In this project I will explore the research question "What is the relationship between immigration and revitalization in Philadelphia?". I started this project last semester in a studio class and want to replicate the results in R. In my previous project, I attempted to match 1980 census data to 2010 and was unable to analyze tracts that had changed boundaries. In revisiting this research question, I was able to locate data sources that allow me to conduct a longitudinal analysis via crosswalk tables from National Historic GIS (NHGIS) and the Longitudinal Tract Database (LTDB). The story regarding "urban revitalizaion" is often discussed through the process of gentrification. Using the knowledge that I gained from previous work on this subject, I will show that Philadelphia's population growth, as well as elements associated with revitalization, is heavily impacted by demographic shifts in the native and foreign born communities within the city-limits.
+
+
+This problem is interdiciplinary because it spans several fields. Through coding in R, there is a heavy data science component, as well as practices and insights gained from geography, criminology, sociology, and demography. I will start with an overview of the city's native- and foreign-born populations. I will then break out each group into more specific "place of birth" categories to understand migratory patterns within the United States for the native-born, and country of origin for the foreign-born. I will explore the relationship of the foreign-born population to areas considered key factors in revitalization: commercial activity and safety. I will investigate characteristics of the immigrant population by looking at English proficiency and year of immigration into the United States. I will also look at the changes in these demographics over time by examining census data between 1980 and 2010. Once scripted, I believe the analysis will be able to be run for one, or several, different cities. Philadelphia can be compared to other major cities. 
+
+
+It is my hope that the results of this project act as a catalyst for future research. The dominant narrative regarding revitalization generally lacks a nuanced discussion on immigration. My belief is that this portfolio will add complexity to the way we describe the growth of urban areas. It is also my hope that immigrant communities will be acknowledged for their contributions in Philadelphia and that government officials will build policies that consciously support foreign-born residents and those yet to come.
+
+### Methods
+*In the first paragraph, describe the data used and general methodological approach. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.*
+
+
+
+
+
+
+
+
+
+### Results
+*Describe your results and include relevant tables, plots, and code/comments used to obtain them. End with a brief conclusion of your findings related to the question you set out to address.*
+
+
+```{r warning=FALSE, message=FALSE}
+#setwd("E:/UPENN/EPID 600/Final Project/Files for project")
+setwd("J:/UPENN/EPID 600/Final Project/Files for project")
+
+library(tidyr)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(ggmap)
+library(foreign)
+library(rgdal)
+library(rgeos)
+library(maptools)
+library(RColorBrewer)
+library(stringr)
+library(RCurl)
+
+options(scipen=999)
+
+#Assign city
+  #Philadelphia  42   101
+  #DelCo PA      42    45
+  #DC            11     1
+  #MontCo MD     24    31    
+  #Baltimore     24   510
+  #Atlanta       13   121
+  #Portland      41    51
+  #San Francisco 06    75
+
+
+stateFIPS <- '42'
+countyFIPS <-  101
+findFIPS <- paste(stateFIPS,str_pad(countyFIPS, 3, pad="0"),sep="")
+filterFIPS <- paste("^",findFIPS,sep="")
+
+#####
+```
+
+```{r}
+#Bring in codebook
+Codes <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/Codebook.csv")%>%
+  read.csv(text=., header = TRUE, sep=",")
+
+#Codes <- read.csv("Codebook.csv",stringsAsFactors=FALSE)
+
+#read in county level
+#####
+County <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/nhgis_ts_nominal_county.csv")%>%
+  read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))
+
+#County <- read.csv("nhgis_ts_nominal_county.csv",stringsAsFactors=FALSE,na.strings=c("", "NA"))
+
+CityName <- ifelse(stateFIPS=="11", paste("District of Columbia"), 
+                   filter(County,(STATEA==stateFIPS) & (COUNTYA==countyFIPS)& (YEAR=="2008-2012"))%>%
+  select(COUNTY,STATE)%>%
+  slice(1)%>%
+  paste(collapse=", "))
+CityName 
+
+
+City <- County %>%
+            filter((STATEA==stateFIPS) & (COUNTYA==countyFIPS)) %>%
+            select(-ends_with("M")) %>%
+            select(which(unlist(lapply(., function(x)!all(is.na(x))))))%>%
+            select(-c(1,3:7)) %>%
+            gather("Var","Total",2:length(.)) %>%
+            left_join(Codes,by="Var")
+
+```
+
+```{r}
+#Net Population Growth
+TotalPop <- City%>%
+  filter(Question == 'Citizenship')
+
+  TotalPop$Pop <- TotalPop$Pop %>%
+    as.factor()%>%
+    factor(., levels=rev(levels(.)))
+  
+    #As stacked bar chart
+      ggplot(TotalPop, aes(YEAR,Total, fill=factor(Pop), order=Pop))+
+        geom_bar(stat="identity", color="black")+
+        scale_fill_manual(values=c("gray40", "gray70"))+
+        theme_bw()+
+        ggtitle(paste("Population Totals for Native & \nForeign Born Residents","\nfor ",CityName,sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))
+ 
+    #As a line graph   
+      ggplot(TotalPop, aes(YEAR,Total,Pop,group=Pop,color=Pop))+
+        geom_line(size=1,linetype = 2)+
+        geom_point(size=4.5)+
+        scale_color_manual(values=c("black", "gray40"))+
+        theme_bw()+
+        ggtitle(paste("Population Totals for Native & \nForeign Born Residents", "\nfor ",CityName,sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))
+```
+
+```{r}
+#Native Born
+  NBorn <- City %>%
+    filter(Pop=="Native Born" & Question=="Place of Birth")%>%
+    filter(Qual=='In State'|Qual=='Other State')
+
+    #total pop  
+    ggplot(NBorn, aes(YEAR,Total, fill=factor(Qual), order=Qual))+
+        geom_bar(stat="identity")+
+            scale_fill_manual(values=c("gray40", "gray70"))+
+            theme_bw()+
+            ggtitle(paste("Native Born Residents in \n",CityName,sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))
+            
+      #born in state or in another state
+        ggplot(NBorn, aes(YEAR,Total))+
+          geom_bar(stat="identity")+
+          facet_wrap(~Qual)+
+          theme_bw()+
+          ggtitle(paste("Birth Place of Native Born Residents in \n",CityName,sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=16))+
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      
+      #by specific location
+      NBorn2 <- NBorn%>%
+        filter(Qual=="Other State" & Qual2!="total")
+    
+      #each year by Region  
+        ggplot(NBorn2, aes(YEAR,Total))+
+          geom_bar(stat="identity")+
+          facet_wrap(~Qual2, ncol=4)+
+          theme_bw()+
+          ggtitle(paste("Birth Place of Native Born Residents in \n",CityName,"by Region",sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))+
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    
+      #each region by year
+        ggplot(NBorn2, aes(Qual2,Total))+
+          geom_bar(stat="identity")+
+          facet_wrap(~YEAR)+
+          theme_bw()+
+          ggtitle(paste("Birth Place of Native Born Residents in \n",CityName," by Year",sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))+
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r} 
+#Foreign Born
+FBornSpec<-City %>%
+  filter(Pop=="Foreign Born" & Question=="Place of Birth") %>%
+  filter(YEAR!=1980 & YEAR!=2000)   
+    
+FBornGen <- FBornSpec %>%
+  group_by(YEAR,Qual)%>%
+  summarise(Total=sum(Total))%>%
+  filter(!is.na(Total))
+
+FBornTotal <- FBornGen %>%
+  group_by(YEAR)%>%
+  summarise(Total=sum(Total))%>%
+  mutate(Pop='Foreign Born')
+    
+    #total pop  
+      ggplot()+
+        geom_bar(data=FBornTotal, aes(YEAR, Total),fill="grey30", color="black",stat="identity", width=0.01)+
+       geom_bar(data=FBornGen, aes(YEAR,Total, fill=Qual),color="black", stat="identity", position="dodge")+
+        scale_fill_brewer(palette="PRGn")+
+        theme_bw()+
+        ggtitle(paste("Birth Place of Foreign Born Residents", "\nin ",CityName," by Year",sep=""))+
+        theme(plot.title = element_text(hjust = 0,size=18))+
+     # geom_line(data=tFBorn, aes(YEAR, Total,Pop,group=Pop),size=1, linetype=1)+
+        geom_point(data=FBornTotal, aes(YEAR, Total,Pop,group=Pop),size=3.5)
+      
+    
+    
+   # ggplot(FBornGen, aes(YEAR,Total,Qual,group=Qual,color=Qual))+
+  #      geom_line(size=1,linetype = 1)+
+  #      geom_point(size=4.5)+
+  #      #scale_color_manual(values=c("black", "gray40"))+
+  #      theme_bw()+
+  #      ggtitle(paste("Population Totals for Foreign Born Residents", "\nin ",CityName,sep=""))+
+  #    theme(plot.title = element_text(hjust = 0,size=20))
+    
+    
+    #by year
+#   ggplot(FBornGen, aes(Qual,Total))+
+#      geom_bar(stat="identity")+
+#      facet_wrap(~YEAR)+
+#      theme_bw()+
+#      ggtitle(paste("Population Totals for Foreign Born Residents", "\nin ",CityName,"\n By Year",sep=""))+
+#      theme(plot.title = element_text(hjust = 0,size=20))+
+#      theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.25))
+    
+    #by location
+    ggplot(FBornGen, aes(YEAR,Total))+
+      geom_bar(stat="identity")+
+      facet_wrap(~Qual)+ 
+      theme_bw()+
+      ggtitle(paste("Population Totals for Foreign Born Residents in \n",CityName," by Region ",sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))
+ 
+
+
+    #by specific location?
+#    FBornSpec$Where <- with(FBornSpec, paste(Qual, Qual2, sep="-"))
+#    ggplot(FBornSpec, aes(YEAR,Total))+
+#     geom_bar(stat="identity")+
+#    facet_wrap(~Where)    
+#####
+```
+
+```{r}
+#TRACT GROWTH
+######
+#Read in each crosswalk table, format correctly then rowbind
+  LTDBx1970 <- read.csv("LTDB crosswalk_1970_2010.csv",stringsAsFactors=FALSE)%>%
+        #add year of original tract column
+         mutate(YEAR=1970)%>%
+        #add leading zeros to FIPS, combine with year to create a look up to match with NHGIS census tract data (below)
+        mutate(tractid=str_pad(trtid70, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        #subset to City tracts  
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        #select uniform columns
+        select(YEAR, LOOKUP, weight, trtid10)
+      
+          
+          
+  LTDBx1980 <- read.csv("LTDB crosswalk_1980_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=1980)%>%
+        mutate(tractid=str_pad(trtid80, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+      
+  LTDBx1990 <- read.csv("LTDB crosswalk_1990_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=1990)%>%
+        mutate(tractid=str_pad(trtid90, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+      
+  LTDBx2000 <- read.csv("LTDB crosswalk_2000_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=2000)%>%
+        mutate(tractid=str_pad(trtid00, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+
+#combine all into one table      
+  CrossWalk <- rbind(LTDBx1970, LTDBx1980, LTDBx1990, LTDBx2000)
+```
+  
+Merge tables  
+```{r warning=FALSE}      
+#Read in NHGIS tracts for Native & Foreign Born 1970-2012
+Tracts <- read.csv("nhgis_ts_nominal_tract.csv",stringsAsFactors=FALSE)%>%
+            filter((STATEA==stateFIPS) & (COUNTYA==countyFIPS)) %>%
+            mutate(YEAR=ifelse(YEAR=="2008-2012",2010,YEAR))%>%
+            select(NHGISCODE,YEAR, AT5AA,AT5AB) %>%
+            gather("Var","Total",3:4) 
+
+#Extract FIPS code from NHGISCODE, create matching lookup code to join tables in next step
+TractFIPS <- Tracts %>% 
+    mutate(FIPS=paste(substr(NHGISCODE,2,3), 
+                      substr(NHGISCODE,5,7), 
+                      substr(NHGISCODE,9,14), sep=""))%>%
+    mutate(LOOKUP=paste(YEAR, "_", FIPS, sep=""))
+
+#  head(TractFIPS)
+
+#Shortens table, creates lookup code
+TractHistory <- TractFIPS%>%
+  select(Var,YEAR,Total,LOOKUP,FIPS)%>%
+  left_join(CrossWalk, by="LOOKUP")%>%
+#  mutate(Total2010=round(Total*weight,0))%>%
+  mutate(Total2010=ifelse(YEAR.x=="2010",Total,round(Total*weight,0)))%>%
+  mutate(Total2010=ifelse(Total2010<10,0,Total2010))%>%
+  mutate(trtid10=ifelse(YEAR.x=="2010",FIPS,trtid10))%>%
+  left_join(Codes,by="Var")
+  
+#  head(TractHistory)  
+#  head(filter(TractHistory,YEAR.x=="2010"))
+```
+
+```{r}
+  TractSpread <- TractHistory%>%
+    select(YEAR.x,trtid10,Total2010,Pop)%>%
+    rename(Year=YEAR.x)%>%
+    rename(Total=Total2010)%>%
+    mutate(Measure=ifelse(Pop=="Native Born", paste("n",Year,"NB", sep=""),paste("n",Year,"FB", sep="")))%>%
+    select(trtid10,Total,Measure)%>%
+    group_by(trtid10,Measure)%>%
+    summarise(Total=sum(Total))%>%
+    spread(Measure,Total)%>%
+    replace(is.na(.), 0)
+#head(TractSpread)
+
+Tracts80to10 <- TractSpread%>%
+  mutate(d80to10NB=n2010NB-n1980NB)%>%
+  mutate(d80to10FB=n2010FB-n1980FB)%>%
+  select(trtid10,d80to10FB,d80to10NB)%>%
+  mutate(Change=ifelse((d80to10FB>0 & d80to10NB>0),"Both Increase",
+                 ifelse(d80to10FB>0 & d80to10NB<=0,"FB Increase Only",
+                 ifelse(d80to10FB<=0 & d80to10NB>0,"NB Increase Only",
+                 ifelse(d80to10FB<0 & d80to10NB<0,"Both Decrease","-")))))
+
+
+#head(Tracts80to10)                     
+
+ggplot(Tracts80to10, aes(d80to10NB, d80to10FB, color=factor(Change)))+  
+  geom_point()+
+  geom_abline(intercept = 0, slope = 0)+
+  geom_vline(xintervept=0)+
+  coord_fixed()+
+  theme_bw()+
+  ggtitle(paste("Growth of Native Born and Foreign Born Populations in \n",CityName," between 1980-2010 ",sep=""))+
+  theme(plot.title = element_text(hjust = 0,size=16))
+  
+
+as.data.frame(table(Tracts80to10$Change))%>%
+  mutate(Pct=round(Freq/sum(Freq),2))
+
+a<-Tracts80to10%>%
+  arrange(desc(d80to10NB))%>%
+  mutate(OrderNB=row_number())%>%
+  arrange(desc(d80to10FB))%>%
+  mutate(OrderFB=row_number())
+
+  ggplot(a, aes(x=OrderNB,y=d80to10NB))+  
+    geom_bar(stat="identity",position="identity",fill="blue",color=NA, width=1.5)+
+    #geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+  #  coord_fixed()+
+    theme_bw()+
+    ggtitle(paste("Census Tracts Arranged from Most Growth to Most Loss in the \nNative Born Population in ",CityName,"\nbetween 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=16))
+
+  ggplot(a, aes(x=OrderFB,y=d80to10FB))+  
+    geom_bar(stat="identity",position="identity",fill="orange",color=NA, width=1.5)+
+    #geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Census Tracts Arranged from Most Growth to Most Loss in the \nForeign Born Population in ",CityName,"\nbetween 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=16))
+
+  ggplot(a, aes(x=OrderNB,y=d80to10NB))+  
+    geom_bar(stat="identity",position="identity",fill="blue",color=NA, width=1.5)+
+    geom_bar(aes(y=d80to10FB), stat="identity",position="identity",fill="orange",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Growth of Foreign Born Population (orange) given the \nGrowth of the Native Born Population (blue) \nin ",CityName," between 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=18))
+  
+  ggplot(a, aes(x=OrderFB,y=d80to10FB))+  
+    geom_bar(stat="identity",position="identity",fill="orange",color=NA, width=1.5)+
+    geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Growth of Native Born Population (blue) given the \nGrowth of the and Foreign Born Population (orange) \nin ",CityName," between 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=18))
+
+  
+
+
+
+                         
+                         
+#  mutate(d70to80NB=n1980NB-n1970NB)%>%
+#  mutate(d80to90NB=n1990NB-n1980NB)%>%
+#  mutate(d90to00NB=n2000NB-n1990NB)%>%
+#  mutate(d00to10NB=n2010NB-n2000NB)
+#head(TractComparison)
+    
+```
+
+
+```{r eval=FALSE} 
+#CREATE CHOROPLETH MAP  
+###################################################  
+#                   WORKS                         #
+###################################################  
+getwd()
+  tract <- readOGR(dsn=".", layer="US_tract_2010", stringsAsFactors=FALSE)
+  CBSA <- 
+  tractCity <- tract[grepl(filterFIPS,tract$GEOID10),]      
+  
+  plot(tractCity)
+  
+  #fortify shapefile for use in ggplot
+    ggtract <- fortify(tractCity, region="GEOID10")
+  
+    ggplot(data=ggtract, aes(y=lat, x=long, group=group, fill="id"))+
+      geom_polygon(color="black") +
+#      scale_fill_manual(values="white")+
+       guides(fill=FALSE)+
+      coord_fixed())
+```
+
+      
+#NEEDS TO BE FINISHED   
+```{r eval=FALSE}  
+  #read in tract comparison data
+    data <- read.csv("TractComparison.csv", stringsAsFactors=FALSE)
+      #make sure FIPS/GEOID10 is character string
+        data$GEOID10 <- as.character(data$GEOID10)
+      #change name for join to ggtract
+        names(data)[1] <- "id"
+    
+  #dev.off()
+  
+  
+#Goal: Make long form of difference between decades for ggplot: 
+#Steps: Takes [data], grabs column w/ "d" (the columns that show difference in population between decades), converts it to long form (gather), identifies which values are re: foreign born [Category] <- (contains "FB" in "Measure"), Groups by Category to identify standard deviations [SDValues], cuts these to make categories of -3:3+ s.dev [SD], joins ggtract (fortified .shp of census tracts)
+  DiffBoth <- data %>%
+    select(id, starts_with("d")) %>%
+    gather("Measure","Value", starts_with("d"))%>%
+    mutate(Category=grepl("FB", Measure))%>%
+    group_by(Category)%>%
+    mutate(SDValue=round(Value/sd(Value),2))%>%
+    mutate(SD=cut(SDValue,breaks=c(-Inf,-3,-2,-1,1,2,3,Inf)))%>%
+    left_join(.,ggtract)
+  
+#same as above but Counts by census tract per decade  
+  nBoth <- data %>%
+    select(1:13) %>%
+    gather("Measure","Value", 2:13)%>%
+    mutate(Category=grepl("FB", Measure))%>%
+    group_by(Category)%>%
+    mutate(SDValue=round(Value/sd(Value, na.rm=TRUE),2))%>%
+    mutate(SD=cut(SDValue,breaks=c(0,1,2,3,Inf)))%>%
+    left_join(.,ggtract)
+  
+#Assign colors for standard deviation categories  
+    #sd.fillX <- c("orangered3", "chocolate1", "darkgoldenrod", "gray5", "gray5", "thistle3", "mediumpurple3", "mediumpurple4")
+
+    sd.fill <-c(brewer.pal(name="PuOr",n=7)[c(1,2,3)], "white", brewer.pal(name="PuOr",n=7)[c(5,6,7)])
+    
+    sd.color <- c("gray45", "gray45", "gray45", "gray75", "gray45", "gray45", "gray45") # rep("gray75",8)
+    
+#    sd.alpha <- c()
+```
+
+
+
+```{r eval=FALSE, dpi=400}        
+#Goal: Function to map standard deviations in Philadelphia (convert to function?)
+#Steps: [fill] is dynamic as [SD] is a standardized column, 
+        #[element_blank()] removes axes labels
+        #[scale_fill_manual] uses colors assigned to standard deviation (previous command)
+    
+  #Turn this into a function
+    mapSD <- function(x,z)
+    { ggplot(x)+
+        geom_polygon(aes(x=long, y=lat, group=group, fill=factor(SD),color=factor(SD)), size=0.1)+
+        theme(line=element_blank(), axis.text=element_blank(),axis.title=element_blank())+
+        scale_fill_manual(values=sd.fill,guide=guide_legend(reverse=TRUE))+
+        scale_color_manual(values=sd.color,guide=guide_legend(reverse=TRUE))+
+        coord_fixed()+
+        #theme(legend.position="bottom")+
+        facet_wrap(~Measure, ncol=z)+
+        theme(panel.background=element_rect(fill="grey30"))#"grey90"))=NA
+    } 
+#Map Difference between decades using mapSD function above, facet wrap with 4 columns
+    mapSD(DiffBoth,4)
+    
+#Map Counts by decade using mapSD fucntion above, facet wrap with 5 columns
+    #mapSD(nBoth,6)
+    ggplot(nBoth)+
+      geom_polygon(aes(x=long, y=lat, group=group, fill=factor(SD),color=factor(SD)), size=0.05)+
+      theme(line=element_blank(), axis.text=element_blank(),axis.title=element_blank())+
+      scale_fill_manual(values=sd.fill[4:7])+
+      scale_color_manual(values=sd.color[4:7])+
+      coord_fixed()+
+      theme(legend.position="bottom")+
+      facet_wrap(~Measure, ncol=6)+
+      theme(panel.background=element_rect(fill="grey30"))
+
+```
+
+
+
+#UNUSED
+```{r eval=FALSE}
+#####
+#rename Columns
+#for (i in 6:length(County)){
+#  a <- colnames(County[i])
+#  a
+#  b <- Codes$Readable[match(a, Codes$Code)] 
+#  b
+#  names(County)[i] <- b
+#}
+#t(County[,6:length(County)])
+
+  
+  #EXTRAS
+  #http://zevross.com/blog/2015/10/14/manipulating-and-mapping-us-census-data-in-r-using-the-acs-tigris-and-leaflet-packages-3/
+  
+  #https://cran.r-project.org/doc/contrib/intro-spatial-rl.pdf
+  
+  #http://stat405.had.co.nz/ggmap.pdf
+  #http://www.r-bloggers.com/maps-with-r-and-polygon-boundaries/
+```
