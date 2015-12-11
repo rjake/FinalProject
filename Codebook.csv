@@ -1,41 +1,190 @@
-Var,Pop,Question,Qual,Qual2
-AT5AA,Native Born,Citizenship,,
-AT5AB,Foreign Born,Citizenship,,
-AL8AA,Native Born,Place of Birth,In State,
-AL8AB,Native Born,Place of Birth,Other State,total
-AL8AC,Native Born,Place of Birth,Other State,Northeast
-AL8AD,Native Born,Place of Birth,Other State,Midwest
-AL8AE,Native Born,Place of Birth,Other State,South
-AL8AF,Native Born,Place of Birth,Other State,West
-AL8AG,Native Born,Place of Birth,Outside US,
-AL8AH,Native Born,Place of Birth,not reported,
-AJ6AA,Foreign Born,Place of Birth,Europe,Northern
-AJ6AB,Foreign Born,Place of Birth,Europe,Northern
-AJ6AC,Foreign Born,Place of Birth,Europe,Northern
-AJ6AD,Foreign Born,Place of Birth,Europe,Northern
-AJ6AE,Foreign Born,Place of Birth,Europe,Northern
-AJ6AF,Foreign Born,Place of Birth,Europe,Western
-AJ6AG,Foreign Born,Place of Birth,Europe,Western
-AJ6AH,Foreign Born,Place of Birth,Europe,Western
-AJ6AI,Foreign Born,Place of Birth,Europe,Western
-AJ6AJ,Foreign Born,Place of Birth,Europe,Western
-AJ6AK,Foreign Born,Place of Birth,Europe,Southern
-AJ6AL,Foreign Born,Place of Birth,Europe,Southern
-AJ6AM,Foreign Born,Place of Birth,Europe,Southern
-AJ6AN,Foreign Born,Place of Birth,Europe,Eastern
-AJ6AO,Foreign Born,Place of Birth,Europe,Eastern
-AJ6AP,Foreign Born,Place of Birth,Europe,Eastern
-AJ6AQ,Foreign Born,Place of Birth,Europe,Eastern
-AJ6AR,Foreign Born,Place of Birth,Europe,Eastern
-AJ6AS,Foreign Born,Place of Birth,Europe,Other
-AJ6AT,Foreign Born,Place of Birth,Europe,former USSR
-AJ6AU,Foreign Born,Place of Birth,Asia,Eastern
-AJ6AV,Foreign Born,Place of Birth,Asia,Eastern
-AJ6AW,Foreign Born,Place of Birth,Asia,Other
-AJ6AX,Foreign Born,Place of Birth,Africa,
-AJ6AY,Foreign Born,Place of Birth,Oceania,
-AJ6AZ,Foreign Born,Place of Birth,Americas,Mexico/Cuba
-AJ6BA,Foreign Born,Place of Birth,Americas,Mexico/Cuba
-AJ6BB,Foreign Born,Place of Birth,Americas,Canada
-AJ6BC,Foreign Born,Place of Birth,Americas,Other
-AJ6BD,Foreign Born,Place of Birth,at sea,
+File,Var,Pop,Question,Qual,Qual2
+NHGIS,AJ6AA,Foreign Born,Place of Birth,Europe,Northern
+NHGIS,AJ6AB,Foreign Born,Place of Birth,Europe,Northern
+NHGIS,AJ6AC,Foreign Born,Place of Birth,Europe,Northern
+NHGIS,AJ6AD,Foreign Born,Place of Birth,Europe,Northern
+NHGIS,AJ6AE,Foreign Born,Place of Birth,Europe,Northern
+NHGIS,AJ6AF,Foreign Born,Place of Birth,Europe,Western
+NHGIS,AJ6AG,Foreign Born,Place of Birth,Europe,Western
+NHGIS,AJ6AH,Foreign Born,Place of Birth,Europe,Western
+NHGIS,AJ6AI,Foreign Born,Place of Birth,Europe,Western
+NHGIS,AJ6AJ,Foreign Born,Place of Birth,Europe,Western
+NHGIS,AJ6AK,Foreign Born,Place of Birth,Europe,Southern
+NHGIS,AJ6AL,Foreign Born,Place of Birth,Europe,Southern
+NHGIS,AJ6AM,Foreign Born,Place of Birth,Europe,Southern
+NHGIS,AJ6AN,Foreign Born,Place of Birth,Europe,Eastern
+NHGIS,AJ6AO,Foreign Born,Place of Birth,Europe,Eastern
+NHGIS,AJ6AP,Foreign Born,Place of Birth,Europe,Eastern
+NHGIS,AJ6AQ,Foreign Born,Place of Birth,Europe,Eastern
+NHGIS,AJ6AR,Foreign Born,Place of Birth,Europe,Eastern
+NHGIS,AJ6AS,Foreign Born,Place of Birth,Europe,Other
+NHGIS,AJ6AT,Foreign Born,Place of Birth,Europe,former USSR
+NHGIS,AJ6AU,Foreign Born,Place of Birth,Asia,Eastern
+NHGIS,AJ6AV,Foreign Born,Place of Birth,Asia,Eastern
+NHGIS,AJ6AW,Foreign Born,Place of Birth,Asia,Other
+NHGIS,AJ6AX,Foreign Born,Place of Birth,Africa,
+NHGIS,AJ6AY,Foreign Born,Place of Birth,Oceania,
+NHGIS,AJ6AZ,Foreign Born,Place of Birth,Americas,Mexico/Cuba
+NHGIS,AJ6BA,Foreign Born,Place of Birth,Americas,Mexico/Cuba
+NHGIS,AJ6BB,Foreign Born,Place of Birth,Americas,Canada
+NHGIS,AJ6BC,Foreign Born,Place of Birth,Americas,Other
+NHGIS,AJ6BD,Foreign Born,Place of Birth,at sea,
+NHGIS,AL8AA,Native Born,Place of Birth,In State,
+NHGIS,AL8AB,Native Born,Place of Birth,Other State,total
+NHGIS,AL8AC,Native Born,Place of Birth,Other State,Northeast
+NHGIS,AL8AD,Native Born,Place of Birth,Other State,Midwest
+NHGIS,AL8AE,Native Born,Place of Birth,Other State,South
+NHGIS,AL8AF,Native Born,Place of Birth,Other State,West
+NHGIS,AL8AG,Native Born,Place of Birth,Outside US,
+NHGIS,AL8AH,Native Born,Place of Birth,not reported,
+NHGIS,AT5AA,Native Born,Citizenship,,
+NHGIS,AT5AB,Foreign Born,Citizenship,,
+B25077,GEO.display-label,Geography,,,
+B25077,GEO.id,Id,,,
+B25077,GEO.id2,FIPS,,,
+B25077,HD01_VD01,Median value (dollars),,,
+B16001,GEO.display-label,Geography,,,
+B16001,GEO.id,Id,,,
+B16001,GEO.id2,FIPS,,,
+B16001,HD01_VD01,Total,,,
+B16001,HD01_VD02,Speak only English,,,
+B16001,HD01_VD03,Spanish or Spanish Creole,,,
+B16001,HD01_VD04,Spanish or Spanish Creole,"Speak English ""very well""",,
+B16001,HD01_VD05,Spanish or Spanish Creole,"Speak English less than ""very well""",,
+B16001,HD01_VD06,"French (incl. Patois, Cajun)",,,
+B16001,HD01_VD07,"French (incl. Patois, Cajun)","Speak English ""very well""",,
+B16001,HD01_VD08,"French (incl. Patois, Cajun)","Speak English less than ""very well""",,
+B16001,HD01_VD09,French Creole,,,
+B16001,HD01_VD10,French Creole,"Speak English ""very well""",,
+B16001,HD01_VD100,Navajo,"Speak English ""very well""",,
+B16001,HD01_VD101,Navajo,"Speak English less than ""very well""",,
+B16001,HD01_VD102,Other Native North American languages,,,
+B16001,HD01_VD103,Other Native North American languages,"Speak English ""very well""",,
+B16001,HD01_VD104,Other Native North American languages,"Speak English less than ""very well""",,
+B16001,HD01_VD105,Hungarian,,,
+B16001,HD01_VD106,Hungarian,"Speak English ""very well""",,
+B16001,HD01_VD107,Hungarian,"Speak English less than ""very well""",,
+B16001,HD01_VD108,Arabic,,,
+B16001,HD01_VD109,Arabic,"Speak English ""very well""",,
+B16001,HD01_VD11,French Creole,"Speak English less than ""very well""",,
+B16001,HD01_VD110,Arabic,"Speak English less than ""very well""",,
+B16001,HD01_VD111,Hebrew,,,
+B16001,HD01_VD112,Hebrew,"Speak English ""very well""",,
+B16001,HD01_VD113,Hebrew,"Speak English less than ""very well""",,
+B16001,HD01_VD114,African languages,,,
+B16001,HD01_VD115,African languages,"Speak English ""very well""",,
+B16001,HD01_VD116,African languages,"Speak English less than ""very well""",,
+B16001,HD01_VD117,Other and unspecified languages,,,
+B16001,HD01_VD118,Other and unspecified languages,"Speak English ""very well""",,
+B16001,HD01_VD119,Other and unspecified languages,"Speak English less than ""very well""",,
+B16001,HD01_VD12,Italian,,,
+B16001,HD01_VD13,Italian,"Speak English ""very well""",,
+B16001,HD01_VD14,Italian,"Speak English less than ""very well""",,
+B16001,HD01_VD15,Portuguese or Portuguese Creole,,,
+B16001,HD01_VD16,Portuguese or Portuguese Creole,"Speak English ""very well""",,
+B16001,HD01_VD17,Portuguese or Portuguese Creole,"Speak English less than ""very well""",,
+B16001,HD01_VD18,German,,,
+B16001,HD01_VD19,German,"Speak English ""very well""",,
+B16001,HD01_VD20,German,"Speak English less than ""very well""",,
+B16001,HD01_VD21,Yiddish,,,
+B16001,HD01_VD22,Yiddish,"Speak English ""very well""",,
+B16001,HD01_VD23,Yiddish,"Speak English less than ""very well""",,
+B16001,HD01_VD24,Other West Germanic languages,,,
+B16001,HD01_VD25,Other West Germanic languages,"Speak English ""very well""",,
+B16001,HD01_VD26,Other West Germanic languages,"Speak English less than ""very well""",,
+B16001,HD01_VD27,Scandinavian languages,,,
+B16001,HD01_VD28,Scandinavian languages,"Speak English ""very well""",,
+B16001,HD01_VD29,Scandinavian languages,"Speak English less than ""very well""",,
+B16001,HD01_VD30,Greek,,,
+B16001,HD01_VD31,Greek,"Speak English ""very well""",,
+B16001,HD01_VD32,Greek,"Speak English less than ""very well""",,
+B16001,HD01_VD33,Russian,,,
+B16001,HD01_VD34,Russian,"Speak English ""very well""",,
+B16001,HD01_VD35,Russian,"Speak English less than ""very well""",,
+B16001,HD01_VD36,Polish,,,
+B16001,HD01_VD37,Polish,"Speak English ""very well""",,
+B16001,HD01_VD38,Polish,"Speak English less than ""very well""",,
+B16001,HD01_VD39,Serbo-Croatian,,,
+B16001,HD01_VD40,Serbo-Croatian,"Speak English ""very well""",,
+B16001,HD01_VD41,Serbo-Croatian,"Speak English less than ""very well""",,
+B16001,HD01_VD42,Other Slavic languages,,,
+B16001,HD01_VD43,Other Slavic languages,"Speak English ""very well""",,
+B16001,HD01_VD44,Other Slavic languages,"Speak English less than ""very well""",,
+B16001,HD01_VD45,Armenian,,,
+B16001,HD01_VD46,Armenian,"Speak English ""very well""",,
+B16001,HD01_VD47,Armenian,"Speak English less than ""very well""",,
+B16001,HD01_VD48,Persian,,,
+B16001,HD01_VD49,Persian,"Speak English ""very well""",,
+B16001,HD01_VD50,Persian,"Speak English less than ""very well""",,
+B16001,HD01_VD51,Gujarati,,,
+B16001,HD01_VD52,Gujarati,"Speak English ""very well""",,
+B16001,HD01_VD53,Gujarati,"Speak English less than ""very well""",,
+B16001,HD01_VD54,Hindi,,,
+B16001,HD01_VD55,Hindi,"Speak English ""very well""",,
+B16001,HD01_VD56,Hindi,"Speak English less than ""very well""",,
+B16001,HD01_VD57,Urdu,,,
+B16001,HD01_VD58,Urdu,"Speak English ""very well""",,
+B16001,HD01_VD59,Urdu,"Speak English less than ""very well""",,
+B16001,HD01_VD60,Other Indic languages,,,
+B16001,HD01_VD61,Other Indic languages,"Speak English ""very well""",,
+B16001,HD01_VD62,Other Indic languages,"Speak English less than ""very well""",,
+B16001,HD01_VD63,Other Indo-European languages,,,
+B16001,HD01_VD64,Other Indo-European languages,"Speak English ""very well""",,
+B16001,HD01_VD65,Other Indo-European languages,"Speak English less than ""very well""",,
+B16001,HD01_VD66,Chinese,,,
+B16001,HD01_VD67,Chinese,"Speak English ""very well""",,
+B16001,HD01_VD68,Chinese,"Speak English less than ""very well""",,
+B16001,HD01_VD69,Japanese,,,
+B16001,HD01_VD70,Japanese,"Speak English ""very well""",,
+B16001,HD01_VD71,Japanese,"Speak English less than ""very well""",,
+B16001,HD01_VD72,Korean,,,
+B16001,HD01_VD73,Korean,"Speak English ""very well""",,
+B16001,HD01_VD74,Korean,"Speak English less than ""very well""",,
+B16001,HD01_VD75,"Mon-Khmer, Cambodian",,,
+B16001,HD01_VD76,"Mon-Khmer, Cambodian","Speak English ""very well""",,
+B16001,HD01_VD77,"Mon-Khmer, Cambodian","Speak English less than ""very well""",,
+B16001,HD01_VD78,Hmong,,,
+B16001,HD01_VD79,Hmong,"Speak English ""very well""",,
+B16001,HD01_VD80,Hmong,"Speak English less than ""very well""",,
+B16001,HD01_VD81,Thai,,,
+B16001,HD01_VD82,Thai,"Speak English ""very well""",,
+B16001,HD01_VD83,Thai,"Speak English less than ""very well""",,
+B16001,HD01_VD84,Laotian,,,
+B16001,HD01_VD85,Laotian,"Speak English ""very well""",,
+B16001,HD01_VD86,Laotian,"Speak English less than ""very well""",,
+B16001,HD01_VD87,Vietnamese,,,
+B16001,HD01_VD88,Vietnamese,"Speak English ""very well""",,
+B16001,HD01_VD89,Vietnamese,"Speak English less than ""very well""",,
+B16001,HD01_VD90,Other Asian languages,,,
+B16001,HD01_VD91,Other Asian languages,"Speak English ""very well""",,
+B16001,HD01_VD92,Other Asian languages,"Speak English less than ""very well""",,
+B16001,HD01_VD93,Tagalog,,,
+B16001,HD01_VD94,Tagalog,"Speak English ""very well""",,
+B16001,HD01_VD95,Tagalog,"Speak English less than ""very well""",,
+B16001,HD01_VD96,Other Pacific Island languages,,,
+B16001,HD01_VD97,Other Pacific Island languages,"Speak English ""very well""",,
+B16001,HD01_VD98,Other Pacific Island languages,"Speak English less than ""very well""",,
+B16001,HD01_VD99,Navajo,,,
+B05005,GEO.display-label,Geography,,,
+B05005,GEO.id2,FIPS,,,
+B05005,HD01_VD01,Total,,,
+B05005,HD01_VD02,Entered 2010 or later ,,,
+B05005,HD01_VD03,Entered 2010 or later ,Native Born,,
+B05005,HD01_VD04,Entered 2010 or later,Foreign born,,
+B05005,HD01_VD05,Entered 2010 or later,Foreign born,Naturalized U.S. citizen,
+B05005,HD01_VD06,Entered 2010 or later,Foreign born,Not a U.S. citizen,
+B05005,HD01_VD07,Entered 2000 to 2009,,,
+B05005,HD01_VD08,Entered 2000 to 2009,Native Born,,
+B05005,HD01_VD09,Entered 2000 to 2009,Foreign born,,
+B05005,HD01_VD10,Entered 2000 to 2009,Foreign born,Naturalized U.S. citizen,
+B05005,HD01_VD11,Entered 2000 to 2009,Foreign born,Not a U.S. citizen,
+B05005,HD01_VD12,Entered 1990 to 1999,,,
+B05005,HD01_VD13,Entered 1990 to 1999,Native Born,,
+B05005,HD01_VD14,Entered 1990 to 1999,Foreign born,,
+B05005,HD01_VD15,Entered 1990 to 1999,Foreign born,Naturalized U.S. citizen,
+B05005,HD01_VD16,Entered 1990 to 1999,Foreign born,Not a U.S. citizen,
+B05005,HD01_VD17,Entered before 1990,,,
+B05005,HD01_VD18,Entered before 1990,Native Born,,
+B05005,HD01_VD19,Entered before 1990,Foreign born,,
+B05005,HD01_VD20,Entered before 1990,Foreign born,Naturalized U.S. citizen,
+B05005,HD01_VD21,Entered before 1990,Foreign born,Not a U.S. citizen,
