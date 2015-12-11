@@ -1,0 +1,625 @@
+---
+title: "Immigration and Reviatilzation in Philadelphia"
+author: "Jake Riley"
+output: html_document
+---
+### Overview
+The goal of my project is to look at demographic shifts in the foreign-born community in Philadelphia between 1970-2010. It can easily be argued that Philadelphia (and many urban areas) has been actively devitalized since the 1970s. As will be shown in this project, Philadelphia lost over 300,000 residents in the 1970s, a reduction of over 13%. This is equivalent to half of the residents in Washington, DC leaving Philadelphia in the span of 10 years. In each subsequent census, the trend continued until a slight increase occured in 2010. Closer analysis of this 1% population increase shows that the growth is attributed to an increase in foreign-born residents in Philadelphia. This project seeks to explore the changing demographics within the city.
+
+For this project, I consulted three faculty members: Eugene Brusilovsky, Irma Elo, and Amy Hillier. Eugene Brusilovsky is a professor of statistics in the MUSA program (Masters in Urban Spatial Analytics). Eugene recommended normalizing the data by using density to describe each census tract and to use regression analysis for the relationship between immigrant communities, land use, and crime. Eugene has noted that block group data would be ideal but that the census might suppress responses from the foreign born at the block level because some areas are likley to have few foreign born individuals. Dr. Elo in the sociology department suggested other data sets, for example the American Housing Survey, and the Economic Census. Dr. Elo recommended looking at the relationship between median home value and U.S. citizenship for the foreign-born community. Dr. Hillier is in the City Planning department and concurs that block groups would be ideal but no available due to foreign-born residents being a small part of the population. 
+
+### Introduction 
+In this project I will explore the research question "What is the relationship between immigration and revitalization in Philadelphia?". I started this project last semester in a studio class and want to replicate the results in R. In my previous project, I attempted to match 1980 census data to 2010 and was unable to analyze tracts that had changed boundaries. In revisiting this research question, I was able to locate data sources that allow me to conduct a longitudinal analysis via crosswalk tables from National Historic GIS (NHGIS) and the Longitudinal Tract Database (LTDB). The story regarding "urban revitalizaion" is often discussed through the process of gentrification. Using the knowledge that I gained from previous work on this subject, I will show that Philadelphia's population growth, as well as elements associated with revitalization, is heavily impacted by demographic shifts in the native and foreign born communities within the city-limits.
+
+
+This problem is interdiciplinary because it spans several fields. Through coding in R, there is a heavy data science component, there are also insights gained from geography, criminology, sociology, and demography. I will start with an overview of the city's native- and foreign-born populations. I will then break out each group into more specific "place of birth" categories to understand migratory patterns within the United States for the native-born, and country of origin for the foreign-born. 
+I will also look at the changes in these demographics over time by examining census data between 1980 and 2010. I had originally hoped to explore the relationship of the foreign-born population to areas considered key factors in revitalization: commercial activity and safety. However, I decided to make the code dynamic so that it is able to look at any county in the nation. It is my hope to turn this into a shiny app and have it be available to the public. I have run this file twice, once for Philadelphia and once for Washington, DC. I will compare the results of [Philly](https://raw.githubusercontent.com/rjake/FinalProject/master/Eval_Philadelphia.html) as it relates to [DC](https://raw.githubusercontent.com/rjake/FinalProject/master/Eval_WashingtonDC.html). This version has the code; the other two files are just the graphs and charts.
+
+
+It is my hope that the results of this project act as a catalyst for future research. The dominant narrative regarding revitalization generally lacks a nuanced discussion on immigration. My belief is that this portfolio will add complexity to the way we describe the growth of urban areas. It is also my hope that immigrant communities will be acknowledged for their contributions in Philadelphia and that government officials will build policies that consciously support the foreign-born residents who are here, and those yet to come.
+
+### Methods
+I will utilize data from the National Historic GIS [NHGIS](https://data2.nhgis.org/main), the Longitudinal Tract Database [LTDB](http://www.s4.brown.edu/us2010/Researcher/LTDB1.htm), and data related to land use and crime through [OpenDataPhilly](https://www.opendataphilly.org). NHGIS has allowed the census to be studied longitudinally by standardizing questions over time. The wording of both questions and answers have changed over time and so NHGIS has identified the variable names for questions that are consistently asked and arranged them into time-series data sets. In particular, I will be looking at questions regarding count of persons by nativity (native-born vs foreign born), native-born persons by place of birth, and foreign-born persons by place of birth. In a similar manner, the LTDB creates crosswalk tables to compare changes in geography over time. Because census tract boundaries change as populations grow and decline, the LTDB has calculated the approximate area of a tract in 2010 that was formerly part of a census tract (or tracts) in previous decades. Doing so allows social scientists to compare geographic areas using a singular data set (in this case the 2010 census boundaries) and identify demographic shifts by census tract. I will combine the NHGIS data with the LTDB data and invesitigate several relationships between the native- and foreign-born communities.
+
+R Code:
+```{r warning=FALSE, message=FALSE}
+#setwd("E:/UPENN/EPID 600/Final Project/Files for project")
+setwd("J:/UPENN/EPID 600/Final Project/Files for project")
+
+library(RCurl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(ggmap)
+library(foreign)
+library(rgdal)
+library(rgeos)
+library(maptools)
+library(RColorBrewer)
+library(stringr)
+library(shapefiles)
+library(knitr)
+
+options(scipen=999)
+
+#Assign city
+  #Philadelphia  42   101
+  #DelCo PA      42    45
+  #DC            11     1
+  #MontCo MD     24    31    
+  #Baltimore     24   510
+  #Atlanta       13   121
+  #Portland      41    51
+  #San Francisco 06    75
+
+#These two variables identify the FIPS code for the state and county of interest. These are the only two variables that need to be changed to create different county profiles.
+stateFIPS <- '42'
+countyFIPS <-  101
+  #These two variables will be used to filter data later in the script
+findFIPS <- paste(stateFIPS,str_pad(countyFIPS, 3, pad="0"),sep="")
+filterFIPS <- paste("^",findFIPS,sep="")
+```
+
+```{r warning=FALSE}
+#Bring in codebook to give readable titles to variable names
+Codes <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/Codebook.csv")%>%
+  read.csv(text=., header = TRUE, sep=",", stringsAsFactors = FALSE)%>%
+  as.data.frame()
+
+#  Codes <- read.csv("Codebook.csv",stringsAsFactors=FALSE)
+
+#read in county level NHIS data
+County <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/nhgis_ts_nominal_county.csv")%>%
+  read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+  as.data.frame()
+
+#  County <- read.csv("nhgis_ts_nominal_county.csv",stringsAsFactors=FALSE,na.strings=c("", "NA"))
+
+#CityName will be used in the titles of charts and tables and to filter data later in the script
+CityName <- ifelse(stateFIPS=="11", paste("District of Columbia"), 
+                   filter(County,(STATEA==stateFIPS) & (COUNTYA==countyFIPS)& (YEAR=="2008-2012"))%>%
+                      select(COUNTY,STATE)%>%
+                      slice(1)%>%
+                      paste(collapse=", "))
+
+City <- County %>%
+            filter((STATEA==stateFIPS) & (COUNTYA==countyFIPS)) %>%
+            select(-ends_with("M")) %>%
+            select(which(unlist(lapply(., function(x)!all(is.na(x))))))%>%
+            select(-c(1,3:7)) %>%
+            gather("Var","Total",-1) %>%
+            left_join(filter(Codes,File=="NHGIS"), by="Var")
+
+```
+
+
+### Results
+First I will show the changes across the county from 1970-2010
+```{r warning=FALSE}
+#Net Population Growth
+TotalPop <- City%>%
+  filter(Question == 'Citizenship')
+
+  TotalPop$Pop <- TotalPop$Pop %>%
+    as.factor()%>%
+    factor(., levels=rev(levels(.)))
+  
+    #As stacked bar chart
+      ggplot(TotalPop, aes(YEAR,Total, fill=factor(Pop), order=Pop))+
+        geom_bar(stat="identity", color="black")+
+        scale_fill_manual(values=c("gray40", "gray70"))+
+        theme_bw()+
+        ggtitle(paste("Population Totals for Native & \nForeign Born Residents","\nfor ",CityName,sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))
+      
+    #Table showing difference in total population between decades
+     TotalPop%>%
+        group_by(YEAR)%>%
+        summarise(Total=sum(Total))%>%
+        as.data.frame()%>%
+        mutate(Diff=lead(Total)-Total)%>%
+        mutate(Change=paste(round(Diff/Total ,3)*100,"%", sep=""))%>%
+        kable()
+ 
+    #As a line graph   
+      ggplot(TotalPop, aes(YEAR,Total,Pop,group=Pop,color=Pop))+
+        geom_line(size=1,linetype = 2)+
+        geom_point(size=4.5)+
+        scale_color_manual(values=c("black", "gray40"))+
+        theme_bw()+
+        ggtitle(paste("Population Totals for Native & \nForeign Born Residents", "\nfor ",CityName,sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))
+```
+
+**Analysis**
+Similar to DC, Philadelphia took a hit in the 1970s. Philadelphia dropped 13.4% between 1970 and 1980 (~260,400 people) while DC dropped 15.6% (~118,200 people). Both cities continued to decrease in population until the 2010 census where DC saw a large increase of 5.9% (~33,700 people). Philadelphia grew as well, but much less so (<1%, ~8,000 people). The graphs for Philadelphia show that, although there was an increase, the increase is due to the increasing size of the foreign-born population; the native-born population, as a whole, continues to decline. 
+
+
+Here I break out the proportion of native born residents who are born in state vs. those born in another state.
+```{r warning=FALSE}
+#Native Born
+  NBorn <- City %>%
+    filter(Pop=="Native Born" & Question=="Place of Birth")%>%
+    filter(Qual=='In State'|(Qual=='Other State' & Qual2=='total'))
+    
+
+    #total pop  
+    ggplot(NBorn, aes(YEAR,Total, fill=factor(Qual), order=Qual))+
+        geom_bar(stat="identity")+
+            scale_fill_manual(values=c("gray40", "gray70"))+
+            theme_bw()+
+            ggtitle(paste("Native Born Residents in \n",CityName,sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))
+            
+      #born in state or in another state
+        ggplot(NBorn, aes(YEAR,Total,Qual,group=Qual,color=Qual))+
+          geom_line(size=1,linetype = 2)+
+          geom_point(size=4.5)+
+          scale_color_manual(values=c("black", "gray40"),name = "Place of Birth")+
+          theme_bw()+
+          ggtitle(paste("Native Born Residents in \n",CityName,sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=20))
+      
+```
+
+**Analysis**
+Philadelphia's In state residents make up tha majority of the native-born population in Philadelphia. The born-in-state residents have declined at a steady rate each decade and those born out of state appear to be growing, though slowly. In DC, a different ratio exists. In the nation's capitol, more than half of the residents are born out of state and this trend has existed in each of the observed decades.
+
+
+Here I look at each region separately
+```{r warning=FALSE}
+      #by specific location
+      NBorn2 <- City %>%
+        filter(Pop=="Native Born" & Question=="Place of Birth")%>%
+        filter(Qual=="Other State" & Qual2!="total")
+    
+      #each year by Region  
+        ggplot(NBorn2, aes(YEAR,Total))+
+          geom_bar(stat="identity")+
+          facet_wrap(~Qual2, ncol=4)+
+          theme_bw()+
+          ggtitle(paste("Birth Place of Native Born Residents in \n",CityName," by Region",sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))+
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    
+      #each region by year
+        ggplot(NBorn2, aes(Qual2,Total))+
+          geom_bar(stat="identity")+
+          facet_wrap(~YEAR, ncol=5)+
+          theme_bw()+
+          ggtitle(paste("Birth Place of Native Born Residents in \n",CityName," by Year",sep=""))+
+          theme(plot.title = element_text(hjust = 0,size=18))+
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+          scale_x_discrete(name="")
+```
+
+**Analysis**
+The first chart (for Philadelphia) shows that migration from the South was most pronounced in the 1970s and 1980s and has since lowered. The Northeast and West are increasing, with the Northeast becoming the largest group represented in Philadelphia. In DC, the trend has been similar, but the South is still the largest group represented by those who live in DC and were born out-of-state.
+
+
+Here I look at foreign-born residents:
+```{r warning=FALSE} 
+#Foreign Born
+#This is the main table used to create the other two tables, place of birth (Qual2) is more specific (Ex. N. Europe, China)
+FBornSpec<-City %>%
+  filter(Pop=="Foreign Born" & Question=="Place of Birth") %>%
+  filter(YEAR!=1980 & YEAR!=2000)   
+
+#This is a more generalized location for place of birth (Ex. Europe, Asia)       
+FBornGen <- FBornSpec %>%
+  group_by(YEAR,Qual)%>%
+  summarise(Total=sum(Total))%>%
+  filter(!is.na(Total))
+
+#This is the total Count for each decade
+FBornTotal <- FBornGen %>%
+  group_by(YEAR)%>%
+  summarise(Total=sum(Total))%>%
+  mutate(Pop='Foreign Born')
+    
+    #total foreign-born pop by year
+      ggplot()+
+        geom_bar(data=FBornGen, aes(YEAR,Total, fill=Qual),color="black", stat="identity", position="dodge")+
+        scale_fill_brewer(palette="PRGn")+
+        geom_point(data=FBornTotal, aes(YEAR, Total,Pop,group=Pop),size=3.5, color="grey40")+
+        geom_line(data=FBornTotal, aes(YEAR, Total,Pop,group=Pop),size=1, color="grey40", linetype=2)+
+        theme_bw()+
+        ggtitle(paste("Birth Place of Foreign Born Residents \nand Total Foreign-Born Population", "\nin ",CityName," by Year",sep=""))+
+        theme(plot.title = element_text(hjust = 0,size=18))
+       
+
+    
+    #by location
+    ggplot(FBornGen, aes(YEAR,Total))+
+      geom_bar(stat="identity")+
+      facet_wrap(~Qual, ncol=6)+ 
+      theme_bw()+
+      ggtitle(paste("Population Totals for Foreign Born Residents in \n",CityName," by Region ",sep=""))+
+      theme(plot.title = element_text(hjust = 0,size=20))+
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+**Analysis**
+From these two charts you can see that Europeans were the largest immigrant group in Phildelphia in the 1970s and have signficiantly declined. Groups from Africa, the Americas (Central & South), and Asia have been growing each decade, and Asian immigrants are currently the largest represented immigrant group in Philadelphia. DC shows a different trend. In DC, Europeans have been relatively the same in number overtime while groups from Africa, Asia, and most dramatically, the Americas have grown in size from one census to the next. (Note: this question was asked every other decade.)
+
+
+To compare tract growth, I had to create crosswalk tables from the LTDB and NHGIS data:
+```{r warning=FALSE}
+#TRACT GROWTH
+#Read in each crosswalk table, format correctly then rowbind
+  LTDBx1970 <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/LTDB%20crosswalk_1970_2010.csv")%>%
+              read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+              #read.csv("LTDB crosswalk_1970_2010.csv",stringsAsFactors=FALSE)%>%
+        #add year of original tract column
+          mutate(YEAR=1970)%>%
+        #add leading zeros to FIPS, combine with year to create a look up to match with NHGIS census tract data (below)
+          mutate(tractid=str_pad(trtid70, 11, pad="0"))%>%
+          mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        #subset to City tracts  
+          filter(substr(tractid,1,5)==findFIPS)%>%
+        #select uniform columns
+         select(YEAR, LOOKUP, weight, trtid10)
+          
+  LTDBx1980 <-  getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/LTDB%20crosswalk_1980_2010.csv")%>%
+                read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+        #read.csv("LTDB crosswalk_1980_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=1980)%>%
+        mutate(tractid=str_pad(trtid80, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+      
+  LTDBx1990 <-  getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/LTDB%20crosswalk_1990_2010.csv")%>%
+                read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+        #read.csv("LTDB crosswalk_1990_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=1990)%>%
+        mutate(tractid=str_pad(trtid90, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+      
+  LTDBx2000 <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/LTDB%20crosswalk_2000_2010.csv")%>%
+               read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+        #read.csv("LTDB crosswalk_2000_2010.csv",stringsAsFactors=FALSE)%>%
+        mutate(YEAR=2000)%>%
+        mutate(tractid=str_pad(trtid00, 11, pad="0"))%>%
+        mutate(LOOKUP=paste(YEAR,tractid,sep="_"))%>%
+        filter(substr(tractid,1,5)==findFIPS)%>%
+        select(YEAR, LOOKUP, weight, trtid10)
+
+#combine all into one table      
+  CrossWalk <- rbind(LTDBx1970, LTDBx1980, LTDBx1990, LTDBx2000)
+```
+  
+Merge tables  
+```{r warning=FALSE}      
+#Read in NHGIS tracts for Native & Foreign Born 1970-2012
+Tracts <-  #getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/nhgis_ts_nominal_tract.csv")%>%
+          #read.csv(text=., header = TRUE, sep=",",stringsAsFactors=FALSE,na.strings=c("", "NA"))%>%
+      read.csv("nhgis_ts_nominal_tract.csv",stringsAsFactors=FALSE)%>%
+          #chose just state and county of interest
+            filter((STATEA==stateFIPS) & (COUNTYA==countyFIPS)) %>%
+          #rename 2008-2012 year to 2010 (makes an interger)  
+            mutate(YEAR=ifelse(YEAR=="2008-2012",2010,YEAR))%>%
+          #select just the variables of interest  
+            select(NHGISCODE,YEAR, AT5AA,AT5AB) %>%
+          #Convert to long form
+            gather("Var","Total",3:4) 
+
+#Extract FIPS code from NHGISCODE, create matching lookup code to join tables in next step
+TractFIPS <- Tracts %>% 
+    mutate(FIPS=paste(substr(NHGISCODE,2,3), 
+                      substr(NHGISCODE,5,7), 
+                      substr(NHGISCODE,9,14), sep=""))%>%
+    mutate(LOOKUP=paste(YEAR, "_", FIPS, sep=""))
+
+#  head(TractFIPS)
+
+#Shortens table, creates lookup code
+TractHistory <- TractFIPS%>%
+  select(Var,YEAR,Total,LOOKUP,FIPS)%>%
+  left_join(CrossWalk, by="LOOKUP")%>%
+#  mutate(Total2010=round(Total*weight,0))%>%
+  mutate(Total2010=ifelse(YEAR.x=="2010",Total,round(Total*weight,0)))%>%
+  mutate(Total2010=ifelse(Total2010<10,0,Total2010))%>%
+  mutate(trtid10=ifelse(YEAR.x=="2010",FIPS,trtid10))%>%
+  left_join(filter(Codes,File=="NHGIS"),by="Var")
+  
+#  head(TractHistory)  
+#  head(filter(TractHistory,YEAR.x=="2010"))
+```
+
+```{r warning=FALSE}
+#Transforms data to wide form using "spread"" function
+  TractSpread <- TractHistory%>%
+    select(YEAR.x,trtid10,Total2010,Pop)%>%
+    rename(Year=YEAR.x)%>%
+    rename(Total=Total2010)%>%
+    mutate(Measure=ifelse(Pop=="Native Born", paste("n",Year,"NB", sep=""),paste("n",Year,"FB", sep="")))%>%
+    select(trtid10,Total,Measure)%>%
+    group_by(trtid10,Measure)%>%
+    summarise(Total=sum(Total))%>%
+    spread(Measure,Total)%>%
+    replace(is.na(.), 0)
+#head(TractSpread)
+
+#Creates columns to look at change in each census tract between 1980-2010
+Tracts80to10 <- TractSpread%>%
+  mutate(d80to10NB=n2010NB-n1980NB)%>%
+  mutate(d80to10FB=n2010FB-n1980FB)%>%
+  select(trtid10,d80to10FB,d80to10NB)%>%
+  mutate(Change=ifelse((d80to10FB>0 & d80to10NB>0),"Both Increase",
+                 ifelse(d80to10FB>0 & d80to10NB<=0,"FB Increase Only",
+                 ifelse(d80to10FB<=0 & d80to10NB>0,"NB Increase Only",
+                 ifelse(d80to10FB<0 & d80to10NB<0,"Both Decrease","-")))))
+
+
+#head(Tracts80to10)                     
+
+#Shows a scatter plot of tracts that have had increases, decreases or no change in the native-/foreign-born populations
+ggplot(Tracts80to10, aes(d80to10NB, d80to10FB, color=factor(Change)))+  
+  geom_point()+
+  geom_abline(intercept = 0, slope = 0)+
+  geom_vline(xintervept=0)+
+  coord_fixed()+
+  theme_bw()+
+  ggtitle(paste("Change in Number of Native Born and Foreign Born Populations \nin each Census Tract in ",CityName,"\nbetween 1980-2010 ",sep=""))+
+  theme(plot.title = element_text(hjust = 0,size=16))+ 
+  xlab("Change in Native Born Population") + ylab("Change in Foreign Born Population")+
+  guides(color=guide_legend(title=NULL))
+
+#provides a table
+as.data.frame(table(Tracts80to10$Change))%>%
+  mutate(Pct=round(Freq/sum(Freq),2))
+```
+
+**Analysis**
+Knowing that both cities took a huge hit in the 1970s, I chose to compare census tracts between 1980-2010. The scatter plot above shows four quadrants. To the right and left of 0 on the x-axis is the growth and loss of the native born. To the top and bottom of zero on the y-axis is the growth and loss of the foreign born. Dots in the upper right corner represent census tracts that have had an increase in both populations between 1980-2010, and dots in the lower left have had a net loss for btoh groups. In Philadelphia, this chart shows that 46% of the tracts in the city have had an increase in the foreign-born population without an increase in the native-born population. This is in stark comparison to the 7% of tracts that have only had increases in the native born and 19% where there has been growth of both groups. It is noticable that over 25% of census tracts have seen reductions in both populations. DC is simlar. In DC, 55% of census tracts have had a net growth only for the foreign-born population. In addition, DC has a higher rate of tracts in which both populations grew (27%), and a much lower rate for where both populations decreased (14%).
+
+
+```{r warning=FALSE}
+#This adds two columns to the Tracts80to10 table in order to arrange tracts by growth/loss
+DistGrowth<-Tracts80to10%>%
+  arrange(desc(d80to10NB))%>%
+  mutate(OrderNB=row_number())%>%
+  arrange(desc(d80to10FB))%>%
+  mutate(OrderFB=row_number())
+
+#Shows the distribution of growth/loss of native-born population
+  ggplot(DistGrowth, aes(x=OrderNB,y=d80to10NB))+  
+    geom_bar(stat="identity",position="identity",fill="blue",color=NA, width=1.5)+
+    #geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+  #  coord_fixed()+
+    theme_bw()+
+    ggtitle(paste("Census Tracts Arranged from Most Growth to Most Loss in the \nNative Born Population in ",CityName,"\nbetween 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=14))+
+    ylab("Change in Native-Born Population")+
+    xlab("Census Tracts Arranged from Growth to Loss") 
+  
+#table of growth/loss for Native Born
+  DistGrowth%>%
+    mutate(NBDirection=ifelse(d80to10NB>0,"Growth",ifelse(d80to10NB<0,"Loss","-")))%>%
+    group_by(NBDirection)%>%
+    summarise(Total=sum(d80to10NB))%>%
+    kable()
+ 
+#Shows the distribution of growth/loss of foreign-Born population
+  ggplot(DistGrowth, aes(x=OrderFB,y=d80to10FB))+  
+    geom_bar(stat="identity",position="identity",fill="orange",color=NA, width=1.5)+
+    #geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Census Tracts Arranged from Most Growth to Most Loss in the \nForeign Born Population in ",CityName,"\nbetween 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=14))+
+    ylab("Change in Foreign-Born Population")+
+    xlab("Census Tracts Arranged from Growth to Loss") 
+  
+  
+#table of growth/loss for Foreign Born
+  DistGrowth%>%
+    mutate(FBDirection=ifelse(d80to10FB>0,"Growth",ifelse(d80to10FB<0,"Loss","-")))%>%
+    group_by(FBDirection)%>%
+    summarise(Total=sum(d80to10FB))%>%
+    kable()
+
+#Shows growth of Foreign Born Population given the distribution of the Native Born Population
+  ggplot(DistGrowth, aes(x=OrderNB,y=d80to10NB))+  
+    geom_bar(stat="identity",position="identity",fill="blue",color=NA, width=1.5)+
+    geom_bar(aes(y=d80to10FB), stat="identity",position="identity",fill="orange",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Growth of Foreign Born Population (orange) given the \nGrowth of the Native Born Population (blue) \nin ",CityName," between 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=14))+
+    ylab("Change in Native-Born Population")+
+    xlab("Census Tracts Arranged from Growth to Loss (of Native-Born)") 
+  
+
+#Shows growth of Native Born Population given the distribution of the Foreign Born Population    
+  ggplot(DistGrowth, aes(x=OrderFB,y=d80to10FB))+  
+    geom_bar(stat="identity",position="identity",fill="orange",color=NA, width=1.5)+
+    geom_bar(aes(y=d80to10NB), stat="identity",position="identity",fill="blue",color=NA, width=1)+
+    theme_bw()+
+    ggtitle(paste("Growth of Native Born Population (blue) given the \nGrowth of the and Foreign Born Population (orange) \nin ",CityName," between 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=14))+
+    ylab("Change in Foreign-Born Population")+
+    xlab("Census Tracts Arranged from Growth to Loss (of Foreign-Born)") 
+
+  
+#Linear model  
+   summary(lm(d80to10NB~d80to10FB, data=DistGrowth))  
+```
+
+**Analysis**
+These charts show the distribution of change from most growth to most loss for the native-born (blue) and the foreign-born (orange). Here, Philadelphia & DC appear similar: approximately one-quarter of census tracts have had an increase in the native-born population, and more than half of the tracts have had increases for the foreign-born. This is more prnounced in DC with more than 75% of tracts showing growth for the foreign-born. Plotting the foreign-born distribution over the native-born distribution in Philadelphia shows that there is not much of a correlation (p=0.799). In DC, however, there appears to be more of an influence. It appears that presence of one group has a small correlation with the other (R2=0.025, p=0.0323)
+
+###Median Home Values
+One hypothesis about immigrant communities is that working-class immigrants move into areas where housing is more affordable. To test this, I read in the 2010 Median House Value data from the American Communty Survey and added columns for number of foreign-born (n2010FB), number of native-born (n2010NB), totoal population (TPop) and density of foreign-born (FBDensity=n2010FB/TPop).
+```{r warning=FALSE}
+MHValue <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/ACS_10_5YR_B25077_MedianHouseValue.csv")%>%
+  read.csv(text=., header = TRUE, skip=1, stringsAsFactors = FALSE)%>%
+    #read.csv("ACS_10_5YR_B25077_MedianHouseValue.csv", header = TRUE, skip=1, stringsAsFactors = FALSE)
+  as.data.frame()
+
+MHValueCity <- MHValue%>%
+  select(Id2,Estimate..Median.value..dollars.)%>%
+  filter(substr(Id2,1,5)==findFIPS)%>%
+  rename(FIPS=Id2)%>%
+  rename(MHValue=Estimate..Median.value..dollars.)%>%
+  mutate(MHValue=as.numeric(gsub("-","0",.$MHValue)))%>%
+  mutate(FIPS=as.character(FIPS))%>%
+  left_join(select(TractSpread, trtid10, n2010NB, n2010FB), by=c("FIPS"="trtid10"))%>%
+  mutate(TPop=n2010FB+n2010NB)%>%
+  mutate(FBDensity=round((n2010FB/TPop),5))%>%#*100)%>%
+  mutate(MHValue1000s = MHValue/1000)
+```
+
+```{r warning=FALSE}
+#scatter plot of the relationship
+  ggplot(MHValueCity, aes(FBDensity, MHValue1000s))+  
+    geom_point()+
+    theme_bw()+
+    ggtitle(paste("Median House Value & Density of Foreign-Born Population \n in ",CityName," (2010) ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=16))+
+    xlab("% of Population that is Foreign-Born") + 
+    ylab("Median Home Value (Thousands)")
+  
+#Linear Regression between Median House Value & Density of Foreign Born in 2010
+   summary(glm(FBDensity~MHValue1000s, family=binomial(logit),data=filter(MHValueCity, (n2010FB>0)& (MHValue>0)))) 
+```
+
+**Analysis**
+Here I did find some relationship between the density of foreign born to median home value. Visually, I can see that, after the density of foreign-born people in a census tract in Philadlephia exceeds 30%, there becomes less variation in the median home values and the median value becomes closer to $200,000. I did not find statistically significant relationships between the two groups in either Philadelphia or DC.
+
+
+###Mapping
+```{r warning=FALSE} 
+#CREATE CHOROPLETH MAP  
+  #tract <- readOGR(dsn=".", layer="US_tract_2010", stringsAsFactors=FALSE)
+  #tractCity <- tract[grepl(filterFIPS,tract$GEOID10),]      
+  #plot(tractCity)
+  
+  #fortify shapefile for use in ggplot
+  # ggtract <- fortify(tractCity, region="GEOID10")
+  #  write.csv(ggtract,"ggtract.csv")
+ggtract <- getURL("https://raw.githubusercontent.com/rjake/FinalProject/master/ggtract.csv")%>%
+    read.csv(text=., header = TRUE, stringsAsFactors = FALSE)%>%
+   #read.csv("ggtract.csv", header = TRUE, stringsAsFactors = FALSE)
+    as.data.frame()
+#    ggplot(data=ggtract, aes(y=lat, x=long, group=group, fill="white"))+
+#      geom_polygon(color="black") +
+#       guides(fill=FALSE)+
+#      coord_fixed()
+    
+    
+DiffBoth <- TractSpread%>%
+     mutate(id=as.numeric(trtid10))%>%
+    #Values for Native Born
+      mutate(d70to80NB=n1980NB-n1970NB)%>%
+      mutate(d80to90NB=n1990NB-n1980NB)%>%     
+      mutate(d90to00NB=n2000NB-n1990NB)%>%
+      mutate(d00to10NB=n2010NB-n2000NB)%>%
+    #Values for Foreign Born
+      mutate(d70to80FB=n1980FB-n1970FB)%>%
+      mutate(d80to90FB=n1990FB-n1980FB)%>%     
+      mutate(d90to00FB=n2000FB-n1990FB)%>%
+      mutate(d00to10FB=n2010FB-n2000FB)%>%
+    select(id, starts_with("d")) %>%
+    gather("Measure","Value", 2:9)%>%
+    mutate(Decade=as.factor(substr(Measure,1,7)))%>%
+    mutate(Pop=substr(Measure,8,9))%>%
+    group_by(Pop)%>%
+      mutate(SDValue=round(Value/sd(Value),2))%>%
+    mutate(SD=cut(SDValue,breaks=c(-Inf,-3,-2,-1,1,2,3,Inf)))%>%
+    left_join(.,ggtract)
+
+DiffBoth$Decade <- gsub("d70to80","1970-1980",DiffBoth$Decade)
+DiffBoth$Decade <- gsub("d80to90","1980-1990",DiffBoth$Decade)
+DiffBoth$Decade <- gsub("d90to00","1990-2000",DiffBoth$Decade)
+DiffBoth$Decade <- gsub("d00to10","2000-2010",DiffBoth$Decade)
+
+DiffBoth$Pop <- gsub("FB","Foreign-Born",DiffBoth$Pop)
+DiffBoth$Pop <- gsub("NB","Native-Born",DiffBoth$Pop)
+
+head(DiffBoth)
+
+
+#Assign colors for standard deviation categories  
+    sd.fill <-c(brewer.pal(name="PuOr",n=7)[c(1,2,3)], "white", brewer.pal(name="PuOr",n=7)[c(5,6,7)])
+    
+    sd.color <- c("gray45", "gray45", "gray45", "gray75", "gray45", "gray45", "gray45")
+
+#Goal: Function to map standard deviations in Philadelphia (convert to function?)
+#Steps: [fill] is dynamic as [SD] is a standardized column, 
+        #[element_blank()] removes axes labels
+        #[scale_fill_manual] uses colors assigned to standard deviation (previous command)
+    
+  #Turn this into a function
+    mapSD <- function(x)
+    { ggplot(x)+
+        geom_polygon(aes(x=long, y=lat, group=group, fill=factor(SD),color=factor(SD)), size=0.1)+
+        theme(line=element_blank(), axis.text=element_blank(),axis.title=element_blank())+
+        scale_fill_manual(values=sd.fill,guide=guide_legend(reverse=TRUE))+
+        scale_color_manual(values=sd.color,guide=guide_legend(reverse=TRUE))+
+        coord_fixed()+
+        facet_grid(Pop~Decade)+
+        theme(panel.background=element_rect(fill="grey50"))
+    } 
+#Map Difference between decades using mapSD function above, facet wrap with 4 columns
+    mapSD(DiffBoth)+
+        ggtitle(paste("Growth and Loss of Foreign-Born and Native-Born Population in \n",
+                      CityName,"between 1980-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=15))
+```
+
+**Analysis**
+The maps for the native-born population in Philadelphia show that mthe majority of the people who left the city left from North Philadelphia and the area between Penn and Graduate Hospital. For the native-born, 1 standard deviation is approximately 700 people. The darkest orange on the map thus represents at least a loss of 2,000 people in each census tract of that color. For the foreign born, there are more tracts showing growth than loss. For the foreign-born (in Philadelphia), 1 standard deviation is about 200 people and the brightest purple for the foreign-born is approximately 625 people. 
+
+```{r}
+DiffBoth%>%
+  group_by(Pop)%>%
+  summarise(Std.Dev.1=round(sd(Value)))%>%
+  mutate(Std.Dev.2=Std.Dev.1*2)%>%
+  mutate(Std.Dev.3=Std.Dev.1*3)%>%
+  kable()
+
+DecadeChange <- unique(DiffBoth[,1:7])%>%
+                  mutate(Growth=Value>=0)%>%
+                  group_by(Pop,Growth,Decade)%>%
+                  summarise(Difference = sum(Value))
+
+ggplot(DecadeChange, aes(Decade,Difference))+
+    geom_bar(stat="identity", position="identity", color="black", aes(fill=Growth))+
+    facet_wrap(~Pop)+
+    theme_bw()+
+    ggtitle(paste("Difference in Population Between Decades nfor Foreign- & \nNative-Born Population nin ",CityName,"\n between 1970-2010 ",sep=""))+
+    theme(plot.title = element_text(hjust = 0,size=14))+
+  scale_y_continuous(breaks = seq(-300000, 100000, by = 50000))
+```
+
+
+Shows the total loss and total growth between each decade for each group
+
+```{r}       
+DecadeChange%>%
+  spread(Decade, Difference)%>%
+  kable()
+```
+
+**Analysis**
+The above chart and graph show the trends for the growth and loss for each group between each decade. The net-loss of the native-born has lessened each decade. For the tracts that have seen growth, there has been a significant increase in the number of native-born people between 2000 and 2010 census, however, the net-growth for the city still puts the native-born population in a deficit. The trend looks similar in DC, however, there the growth is much greater than the loss and results in a net growth for the city.
+
+
+Below are the net growth totals between each decade for each group
+```{r}
+DecadeChange%>%
+  group_by(Pop,Decade)%>%
+  summarise(Difference=sum(Difference))%>%
+  spread(Decade, Difference)%>%
+  kable()
+
+
+```
+
+**Analysis**
+Similar to the opening charts, the charts show the changes in population size for each group between the decades. 
+
+###Conculsion
+Overall, this analysis provides insight into changing demographics in Philadelphia (and in theory across the country). There are many more questions I wanted to ask with the data and I would like to continue developing this project. Unfortunately, I am at the mercy of the census bureau and aggregate information and the storage capacity available to me on git-hub. I had difficulty using the original shapefile for this dataset because it is very large and I was unable to host it on git-hub. Therefore, I was only able to upload the fortified version of Philadelphia County (ggtract.csv). I attempted to use centroids and other spatial arrangements however, it was too difficult to do given the time restriction. Future iterations of the projecte might include analysis on questions such as English language proficiency, proximity to commercial areas, length of stay in the United States, and majority racial group in each census tract. I hope this project inspires other people to learn more about their cities and can be used as a catalyst for future research. 
